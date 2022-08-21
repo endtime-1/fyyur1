@@ -202,8 +202,6 @@ def show_venue(venue_id):
   for show in past_shows_query:
     past_shows.append({
       "artist_id": show.artist_id,
-      #"artist_name": show.artist.name,
-      #"artist_image_link": show.artist.image_link,
       "start_time": show.start_time.strftime('%Y-%m-%d %H:%M:%S')
     })
 
