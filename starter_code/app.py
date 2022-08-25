@@ -16,9 +16,7 @@ from forms import *
 from flask_migrate import Migrate
 import sys
 from sqlalchemy.orm import relationship
-
-
-
+from models import Venue, Artist, Show
 
 
 #----------------------------------------------------------------------------#
@@ -36,66 +34,6 @@ migrate = Migrate(app, db)
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
-
-class Venue(db.Model):
-    __tablename__ = 'Venue'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    city = db.Column(db.String(120), nullable=False)
-    state = db.Column(db.String(120), nullable=False)
-    address = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-    genres = db.Column(db.String, nullable=False)
-    seeking_talent = db.Column(db.Boolean, nullable=False, default=False)
-    seeking_description = db.Column(db.String(500))
-    website = db.Column(db.String(120))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    shows = db.relationship("Show", backref="venue", lazy=False)
-
-
-    def __repr__(self):
-        return f'<Venue  {self.id} {self.name}'
-
-
-class Artist(db.Model):
-
-
-  __tablename__ = 'Artist'
-
-  id = db.Column(db.Integer, primary_key=True)
-  name = db.Column(db.String)
-  city = db.Column(db.String(120))
-  state = db.Column(db.String(120))
-  phone = db.Column(db.String(120))
-  genres = db.Column(db.String(120))
-  image_link = db.Column(db.String(500))
-  facebook_link = db.Column(db.String(120))
-
-   # TODO: implement any missing fields, as a database migration using Flask-Migrate
-  website = db.Column(db.String(120))
-  seeking_venue = db.Column(db.Boolean, nullable=False, default=False)
-  seeking_description = db.Column(db.String(500))
-  shows = db.relationship("Show", backref="artists", lazy=False )
-  created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
-   
-
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-
-class Show(db.Model):
-    __tablename__ = "Show"
-
-    id = db.Column(db.Integer, primary_key=True)
-    artist_id = db.Column(db.Integer, db.ForeignKey("Artist.id"), nullable=False)
-    venue_id = db.Column(db.Integer, db.ForeignKey("Venue.id"), nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False,)
-
-    def __repr__(self):
-        return f"<Show id={self.id} artist_id={self.artist_id} venue_id={self.venue_id} start_time={self.start_time}"
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -173,6 +111,7 @@ def search_venues():
 
   return render_template('pages/search_venues.html',results=response,search_term=request.form.get('search_term', ''))
 
+
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
@@ -233,15 +172,16 @@ def create_venue_submission():
 
   # on successful db insert, flash success
   try:
-    venue = Venue()
-    venue.name = request.form['name']
-    venue.city = request.form['city']
-    venue.state = request.form['state']
-    venue.address = request.form['address']
-    venue.phone = request.form['phone']
-    tmp_genres = request.form.getlist('genres')
-    venue.genres = ','.join(tmp_genres)
-    venue.facebook_link = request.form['facebook_link']
+    form = VenueForm(request.form)
+    venue = Venue(
+        name=form.name.data,
+        city=form.city.data,
+        state=form.state.data,
+        address=form.address.data,
+        phone=form.phone.data,
+        genres=form.genres.data,
+        facebook_link=form.facebook_link.data,
+        image_link=form.image_link.data)
     
     db.session.add(venue)
     db.session.commit()
